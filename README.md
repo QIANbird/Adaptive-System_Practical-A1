@@ -88,7 +88,7 @@ python tfidf_experiment.py --section Sports > results/task3_tfidf_sports.json
 python lda_experiment.py --section Sports > results/task3_lda_sports.json
 ```
 
-The default dataset is `data/news2.csv`, resolved relative to the script directory. To use a different file, pass `--data /path/to/news2.csv`. The `--limit` option reads only the first N rows; the sample must contain at least 11 articles and include the selected category.
+The default dataset is `data/news2.csv`, resolved relative to the script directory. To use a different file, pass `--data /path/to/news2.csv`. The `--limit` option reads only the first N raw rows before cleaning; the cleaned sample may contain fewer than N articles and must still contain at least 11 articles and include the selected category.
 
 Each successful run prints the model name, category, corpus size, number of target articles, top-k setting, self-exclusion policy, total relevant matches, quality ratio, and two execution times in seconds. LDA output also records its required model parameters. A non-null `sample_limit` identifies a sample run.
 
@@ -99,7 +99,8 @@ Each successful run prints the model name, category, corpus size, number of targ
 - Use identical preprocessing for TF-IDF and LDA. Train LDA on BoW with `num_topics=30, passes=2, random_state=30`; keep other model settings at their library defaults.
 - The actual dataset label is `Food & Drink`, corresponding to “Food and Drink” in the assignment.
 - Search the entire corpus, exclude the query article itself, and take the top 10 remaining articles. Break score ties by CSV row order. Self-exclusion is a project convention because the assignment does not specify this detail.
-- Keep all original rows, including empty and duplicate descriptions, to preserve the correspondence between article and vector indices. An empty description produces an empty BoW and TF-IDF vector; LDA can still produce a topic distribution. Document this policy in the final report.
+- Clean articles in `load_articles` before tokenization or vector construction: remove missing, empty, or whitespace-only descriptions, then deduplicate by the exact description after trimming leading and trailing whitespace. Keep the first occurrence in CSV order, even if later occurrences have different headlines, tags, or categories. Case, punctuation, and internal whitespace differences remain distinct. The original CSV is not modified.
+- Both models and evaluation use the same cleaned article list. Corpus size, target article count, and the quality denominator therefore refer to the cleaned data. Tokenization preserves this list's order and length; descriptions containing only stopwords can still produce empty token lists. Record the cleaning policy and removed counts in the final report.
 - Calculate `ratio_quality = total_goods / (num_target_articles * 10)`, equivalent to mean Precision@10 for queries in the selected category.
 - Run each experiment as a separate process. Model creation time starts near the top of the entry script and includes subsequent imports, argument parsing, data loading, preprocessing, training, vector transformation, and MatrixSimilarity index construction. It excludes Python interpreter startup. Evaluation time covers the shared evaluation function separately. JSON printing is outside both measured stages.
 - For formal comparisons, use the full dataset without `--limit`, run in the same environment, and record execution conditions.

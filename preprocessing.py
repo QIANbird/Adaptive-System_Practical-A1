@@ -1,58 +1,81 @@
-"""共享数据处理：沿用 vectormodel_stem_example.py 的预处理步骤。"""
+# Shared data processing. Reference: vectormodel_stem_example.py
+# This module reads the news CSV file, cleans article descriptions, and builds a Gensim dictionary and Bag of Words (BoW) vectors for use by later model and evaluation scripts.
 
-import csv
-from pathlib import Path
 
-from gensim import corpora
-from nltk import PorterStemmer
+import csv #Used to read the news data file
+from pathlib import Path #Used to handle file paths in a cross-platform way
+from gensim import corpora #Provides text dictionary and bag-of-words vector functionality.
+from nltk import PorterStemmer #Provides the Porter stemmer and English stopword functionality
 from nltk.corpus import stopwords
 
 
+# Data file location
 PROJECT_DIR = Path(__file__).resolve().parent
 DEFAULT_DATA_PATH = PROJECT_DIR / "data" / "news2.csv"
 
-
+# Read the news CSV file, remove articles with missing or duplicate descriptions, and return the list of valid articles.
 def load_articles(data_path=DEFAULT_DATA_PATH, limit=None):
-    """按 CSV 原顺序读取新闻；limit 只用于小样本冒烟检查。"""
-    if limit is not None and limit < 1:
-        raise ValueError("limit must be a positive integer")
+
     with Path(data_path).open(encoding="utf-8-sig", newline="") as stream:
         reader = csv.DictReader(stream)
         required = {"headline", "tags", "article_section", "description"}
         if not required.issubset(reader.fieldnames or []):
             raise ValueError(f"CSV must contain these columns: {sorted(required)}")
+
         articles = []
-        for row in reader:
-            articles.append({key: (row.get(key) or "").strip() for key in required})
-            if limit is not None and len(articles) >= limit:
+        seen_descriptions = set()
+        rows_read = 0
+
+        # Clean and deduplicate using article descriptions. Convert missing values to empty strings; keep only the first article with each non-empty description.
+        for rows_read, row in enumerate(reader, start=1):
+
+            article = {key: (row.get(key) or "").strip() for key in required}
+            description = article["description"]
+
+            if description and description not in seen_descriptions:
+                seen_descriptions.add(description)
+                articles.append(article)
+
+            if limit is not None and rows_read >= limit:
                 break
-    if not articles:
+
+    if rows_read == 0:
         raise ValueError("The dataset contains no articles")
+    
+    if not articles:
+        raise ValueError("No articles remain after removing empty and duplicate descriptions")
     return articles
 
-
+# Clean article descriptions and convert them into lists of tokens
+# Convert to lowercase → split on whitespace → remove English stopwords → apply Porter stemming
 def preprocess_descriptions(articles):
-    """小写化 → 空白分词 → 去英文停用词 → Porter 词干提取。"""
+
+    # Stemmer
     porter = PorterStemmer()
+
+    # Create a set of stopwords
     try:
         stoplist = set(stopwords.words("english"))
     except LookupError as error:
         raise RuntimeError(
-            "Missing NLTK stopwords. Run: python -m nltk.downloader stopwords"
+            "Missing NLTK stopwords"
         ) from error
-    # 保留空描述和重复行，保证文章下标与向量下标始终一致。
+
     return [
         [porter.stem(word) for word in article["description"].lower().split()
          if word not in stoplist]
         for article in articles
     ]
 
-
+# Build a dictionary and bag-of-words vectors from article descriptions
 def build_corpus(articles):
-    """返回两个模型共用的 Dictionary 和 BoW 向量。"""
+
     texts = preprocess_descriptions(articles)
+
     dictionary = corpora.Dictionary(texts)
     if not dictionary:
         raise ValueError("The dataset contains no usable tokens")
+
     model_bow = [dictionary.doc2bow(text) for text in texts]
+    
     return dictionary, model_bow
