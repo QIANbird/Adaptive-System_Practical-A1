@@ -2,7 +2,7 @@
 
 News similarity experiments adapted from the course Gensim and NLTK examples. Person A owns the shared pipeline and Tasks 1–2. Person B can reuse the same experiment scripts for Sports in Task 3.
 
-Current status: the basic pipeline is implemented. Full-dataset experiments, result analysis, and report writing are still pending. Assignment materials and dependencies are stored in docs/; the dataset is stored in data/.
+Current status: the shared pipeline and Task 1 full-dataset TF-IDF run are complete. Results are saved in `results/task1_tfidf_food.json`. Task 2 experiments, comparative analysis, and report writing are still pending. Assignment materials and dependencies are stored in docs/; the dataset is stored in data/.
 
 ## Project structure
 
@@ -108,7 +108,7 @@ Each successful run prints the model name, category, corpus size, number of targ
 
 ## Next steps
 
-- Run and verify full-dataset metrics and both execution times for Tasks 1–2.
+- Run the full-dataset LDA experiment for Task 2 and compare its metrics and execution times with the saved Task 1 results.
 - Inspect successful and unsuccessful retrieval examples and explain differences between TF-IDF and LDA.
 - Reproduce results with Person B and keep Task 3 data and evaluation conventions consistent.
 - Complete the report, Task 4 tagging proposal, and Task 5 prototype where applicable.

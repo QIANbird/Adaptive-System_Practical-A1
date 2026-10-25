@@ -1,0 +1,12 @@
+{
+  "section": "Food & Drink",
+  "corpus_size": 5267,
+  "num_target_articles": 122,
+  "top_k": 10,
+  "exclude_self": true,
+  "total_goods": 731,
+  "ratio_quality": 0.5991803278688524,
+  "model": "tfidf",
+  "model_creation_seconds": 13.13039775006473,
+  "evaluation_seconds": 5.124755416996777
+}
