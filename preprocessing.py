@@ -14,7 +14,7 @@ PROJECT_DIR = Path(__file__).resolve().parent
 DEFAULT_DATA_PATH = PROJECT_DIR / "data" / "news2.csv"
 
 # Read the news CSV file, remove articles with missing or duplicate descriptions, and return the list of valid articles.
-def load_articles(data_path=DEFAULT_DATA_PATH, limit=None):
+def load_articles(data_path=DEFAULT_DATA_PATH):
 
     with Path(data_path).open(encoding="utf-8-sig", newline="") as stream:
         reader = csv.DictReader(stream)
@@ -24,10 +24,9 @@ def load_articles(data_path=DEFAULT_DATA_PATH, limit=None):
 
         articles = []
         seen_descriptions = set()
-        rows_read = 0
 
         # Clean and deduplicate using article descriptions. Convert missing values to empty strings; keep only the first article with each non-empty description.
-        for rows_read, row in enumerate(reader, start=1):
+        for row in reader:
 
             article = {key: (row.get(key) or "").strip() for key in required}
             description = article["description"]
@@ -36,12 +35,6 @@ def load_articles(data_path=DEFAULT_DATA_PATH, limit=None):
                 seen_descriptions.add(description)
                 articles.append(article)
 
-            if limit is not None and rows_read >= limit:
-                break
-
-    if rows_read == 0:
-        raise ValueError("The dataset contains no articles")
-    
     if not articles:
         raise ValueError("No articles remain after removing empty and duplicate descriptions")
     return articles

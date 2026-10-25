@@ -67,13 +67,6 @@ Download stopwords once during setup. Experiment scripts do not download resourc
 
 ## Running experiments
 
-Start with a small smoke check. These runs are for checking the pipeline and must not be used as assignment results:
-
-```bash
-python tfidf_experiment.py --limit 100
-python lda_experiment.py --limit 100
-```
-
 Run Tasks 1–2 on the full dataset and save the JSON output:
 
 ```bash
@@ -88,9 +81,9 @@ python tfidf_experiment.py --section Sports > results/task3_tfidf_sports.json
 python lda_experiment.py --section Sports > results/task3_lda_sports.json
 ```
 
-The default dataset is `data/news2.csv`, resolved relative to the script directory. To use a different file, pass `--data /path/to/news2.csv`. The `--limit` option reads only the first N raw rows before cleaning; the cleaned sample may contain fewer than N articles and must still contain at least 11 articles and include the selected category.
+The default dataset is `data/news2.csv`, resolved relative to the script directory. To use a different file, pass `--data /path/to/news2.csv`. Each run reads the entire dataset and removes empty and duplicate descriptions before building the model. The cleaned corpus must contain at least 11 articles and include the selected category.
 
-Each successful run prints the model name, category, corpus size, number of target articles, top-k setting, self-exclusion policy, total relevant matches, quality ratio, and two execution times in seconds. LDA output also records its required model parameters. A non-null `sample_limit` identifies a sample run.
+Each successful run prints the model name, category, corpus size, number of target articles, top-k setting, self-exclusion policy, total relevant matches, quality ratio, and two execution times in seconds. LDA output also records its required model parameters.
 
 ## Shared experiment conventions
 
@@ -102,8 +95,8 @@ Each successful run prints the model name, category, corpus size, number of targ
 - Clean articles in `load_articles` before tokenization or vector construction: remove missing, empty, or whitespace-only descriptions, then deduplicate by the exact description after trimming leading and trailing whitespace. Keep the first occurrence in CSV order, even if later occurrences have different headlines, tags, or categories. Case, punctuation, and internal whitespace differences remain distinct. The original CSV is not modified.
 - Both models and evaluation use the same cleaned article list. Corpus size, target article count, and the quality denominator therefore refer to the cleaned data. Tokenization preserves this list's order and length; descriptions containing only stopwords can still produce empty token lists. Record the cleaning policy and removed counts in the final report.
 - Calculate `ratio_quality = total_goods / (num_target_articles * 10)`, equivalent to mean Precision@10 for queries in the selected category.
-- Run each experiment as a separate process. Model creation time starts near the top of the entry script and includes subsequent imports, argument parsing, data loading, preprocessing, training, vector transformation, and MatrixSimilarity index construction. It excludes Python interpreter startup. Evaluation time covers the shared evaluation function separately. JSON printing is outside both measured stages.
-- For formal comparisons, use the full dataset without `--limit`, run in the same environment, and record execution conditions.
+- Run each experiment as a separate process. Model creation time starts inside `main()`, after argument parsing and immediately before `load_articles()`, and ends after MatrixSimilarity index construction. It includes data loading, cleaning, preprocessing, training, and vector transformation, but excludes Python interpreter startup, library imports, and argument parsing. TF-IDF and LDA use the same timing boundaries. Evaluation time covers the shared evaluation function separately. JSON printing is outside both measured stages. Hardware and system load still affect measured execution times.
+- For comparisons, run in the same environment and record execution conditions.
 
 ## Connection to the course examples
 
@@ -126,4 +119,4 @@ Commit the source files, README, `docs/requirements.txt`, `data/news2.csv`, and 
 
 Do not commit a local virtual environment, Python caches, or IDE-specific settings. `.gitignore` excludes `.venv/`, `__pycache__/`, and common local editor settings. Python packages are installed from the dependency file on each computer; the virtual environment itself is not portable.
 
-The existing environment and smoke checks were verified on macOS with Python 3.12.13. Windows setup instructions are provided, but execution on Windows has not yet been verified.
+The existing environment was verified on macOS with Python 3.12.13. Windows setup instructions are provided, but execution on Windows has not yet been verified.
