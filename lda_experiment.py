@@ -40,6 +40,7 @@ def main():
     result = evaluate_quality(articles, lda_vectors, matrix_lda, args.section)
     evaluation_seconds = perf_counter() - evaluation_start
 
+    # Add experiment metadata and timing information to the JSON report.
     result.update({
         "model": "lda",
         "num_topics": NUM_TOPICS,

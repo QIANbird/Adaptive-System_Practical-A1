@@ -1,7 +1,7 @@
 """Entry point for the TF-IDF experiment."""
 
 from time import perf_counter
-import argparse  # Parse command-line arguments passed to the script.
+import argparse
 import json
 from gensim import models, similarities
 from evaluation import evaluate_quality
@@ -16,24 +16,20 @@ def main():
     parser.add_argument("--section", default="Food & Drink")
     args = parser.parse_args()
 
-    # Start timing model creation.
+    # Preprocess the data
     model_start = perf_counter()
-
-    # Load the raw data and preprocess it.
     articles = load_articles(args.data)
     dictionary, model_bow = build_corpus(articles)
 
-    # Convert each article's BoW vector into a TF-IDF vector.
+    # Build the TF-IDF model
     tfidf = models.TfidfModel(model_bow)
     tfidf_vectors = list(tfidf[model_bow])
-
     matrix_tfidf = similarities.MatrixSimilarity(
         tfidf_vectors, num_features=len(dictionary)
     )
-    # Stop timing data processing and model creation.
     model_seconds = perf_counter() - model_start
 
-    # Start timing model evaluation.
+    # Query similarities and evaluate the model.
     evaluation_start = perf_counter()
     # Evaluate model performance for the specified category.
     result = evaluate_quality(articles, tfidf_vectors, matrix_tfidf, args.section)
